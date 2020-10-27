@@ -76,6 +76,19 @@ const init = async () => {
       }
     }
   })
+
+  app.ports.idbExport.subscribe(() => {
+    db.transaction('tables', 'readwrite').objectStore('tables').getAll().onsuccess = e => {
+      const contents = e.target.result
+
+      const a = document.createElement('a')
+      document.body.appendChild(a)
+      const url = window.URL.createObjectURL(new Blob([JSON.stringify(contents)]))
+      a.href = url;
+      a.download = `${new Date()}`
+      a.click()
+    }
+  })
 }
 
 const getDb = () => {

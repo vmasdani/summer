@@ -25,6 +25,7 @@ port idbGet : String -> Cmd msg
 port idbAdd : RecvModel -> Cmd msg
 port idbDelete : DeleteModel -> Cmd msg
 port idbRecv : (RecvModel -> msg) -> Sub msg
+port idbExport : () -> Cmd msg
 
 type alias Model =
   { test : String
@@ -156,6 +157,8 @@ type Msg
   | SelectBomListItem Bom
   | DeleteItem String
   | DeleteBom String
+  | Export
+  | Import
 
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
@@ -279,6 +282,12 @@ update msg model =
       ( { model | selectedBom = Nothing }
       , idbDelete { name="boms", uuid=uuid }
       )
+    
+    Export ->
+      ( model, idbExport () )
+
+    Import ->
+      ( model, Cmd.none )
 
 subscriptions : Model -> Sub Msg
 subscriptions _ =
@@ -345,7 +354,7 @@ view model =
         , style "justify-content" "space-between"
         ]
         [ button [] [ text "Import (WIP)" ]
-        , button [] [ text "Export (WIP)" ]
+        , button [ onClick Export ] [ text "Export" ]
         ]
     , div 
         [ style "margin-top" "1em"

@@ -5324,6 +5324,12 @@ var $author$project$Main$idbDelete = _Platform_outgoingPort(
 					$elm$json$Json$Encode$string($.uuid))
 				]));
 	});
+var $elm$json$Json$Encode$null = _Json_encodeNull;
+var $author$project$Main$idbExport = _Platform_outgoingPort(
+	'idbExport',
+	function ($) {
+		return $elm$json$Json$Encode$null;
+	});
 var $author$project$Main$Item = F6(
 	function (uuid, name, price, qty, link, bomUuid) {
 		return {bomUuid: bomUuid, link: link, name: name, price: price, qty: qty, uuid: uuid};
@@ -5994,7 +6000,7 @@ var $author$project$Main$update = F2(
 					model,
 					$author$project$Main$idbDelete(
 						{name: 'items', uuid: uuid}));
-			default:
+			case 'DeleteBom':
 				var uuid = msg.a;
 				return _Utils_Tuple2(
 					_Utils_update(
@@ -6002,10 +6008,17 @@ var $author$project$Main$update = F2(
 						{selectedBom: $elm$core$Maybe$Nothing}),
 					$author$project$Main$idbDelete(
 						{name: 'boms', uuid: uuid}));
+			case 'Export':
+				return _Utils_Tuple2(
+					model,
+					$author$project$Main$idbExport(_Utils_Tuple0));
+			default:
+				return _Utils_Tuple2(model, $elm$core$Platform$Cmd$none);
 		}
 	});
 var $author$project$Main$AddNewBom = {$: 'AddNewBom'};
 var $author$project$Main$AddNewItem = {$: 'AddNewItem'};
+var $author$project$Main$Export = {$: 'Export'};
 var $author$project$Main$InputBomName = function (a) {
 	return {$: 'InputBomName', a: a};
 };
@@ -6734,10 +6747,13 @@ var $author$project$Main$view = function (model) {
 							])),
 						A2(
 						$elm$html$Html$button,
-						_List_Nil,
 						_List_fromArray(
 							[
-								$elm$html$Html$text('Export (WIP)')
+								$elm$html$Html$Events$onClick($author$project$Main$Export)
+							]),
+						_List_fromArray(
+							[
+								$elm$html$Html$text('Export')
 							]))
 					])),
 				A2(
