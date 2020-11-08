@@ -5205,16 +5205,46 @@ var $elm$random$Random$initialSeed = function (x) {
 	return $elm$random$Random$next(
 		A2($elm$random$Random$Seed, state2, incr));
 };
+var $cuducos$elm_format_number$FormatNumber$Locales$Exact = function (a) {
+	return {$: 'Exact', a: a};
+};
+var $cuducos$elm_format_number$FormatNumber$Locales$Min = function (a) {
+	return {$: 'Min', a: a};
+};
+var $cuducos$elm_format_number$FormatNumber$Locales$base = {
+	decimalSeparator: '.',
+	decimals: $cuducos$elm_format_number$FormatNumber$Locales$Min(0),
+	negativePrefix: '−',
+	negativeSuffix: '',
+	positivePrefix: '',
+	positiveSuffix: '',
+	thousandSeparator: '',
+	zeroPrefix: '',
+	zeroSuffix: ''
+};
+var $cuducos$elm_format_number$FormatNumber$Locales$spanishLocale = _Utils_update(
+	$cuducos$elm_format_number$FormatNumber$Locales$base,
+	{
+		decimalSeparator: ',',
+		decimals: $cuducos$elm_format_number$FormatNumber$Locales$Exact(3),
+		thousandSeparator: '.'
+	});
 var $author$project$Main$init = function (seed) {
 	var initialModel = {
 		boms: _List_Nil,
+		currency: 'Rp',
 		currentSeed: $elm$random$Random$initialSeed(seed),
 		currentUuid: $elm$core$Maybe$Nothing,
+		customCurrency: false,
+		customCurrencyValue: '',
+		deleteInit: false,
 		items: _List_Nil,
 		newBom: $author$project$Main$initialBom,
 		newItem: $author$project$Main$initialItem,
 		selectedBom: $elm$core$Maybe$Nothing,
-		test: ''
+		selectedNumberFormattingLocale: $cuducos$elm_format_number$FormatNumber$Locales$spanishLocale,
+		test: '',
+		uuidToDelete: ''
 	};
 	return _Utils_Tuple2(
 		initialModel,
@@ -5397,6 +5427,12 @@ var $danyx23$elm_uuid$Uuid$toString = function (_v0) {
 	var internalString = _v0.a;
 	return internalString;
 };
+var $cuducos$elm_format_number$FormatNumber$Locales$usLocale = _Utils_update(
+	$cuducos$elm_format_number$FormatNumber$Locales$base,
+	{
+		decimals: $cuducos$elm_format_number$FormatNumber$Locales$Exact(2),
+		thousandSeparator: ','
+	});
 var $danyx23$elm_uuid$Uuid$Uuid = function (a) {
 	return {$: 'Uuid', a: a};
 };
@@ -5996,8 +6032,14 @@ var $author$project$Main$update = F2(
 					$elm$core$Platform$Cmd$none);
 			case 'DeleteItem':
 				var uuid = msg.a;
-				return _Utils_Tuple2(
-					model,
+				return (!_Utils_eq(model.uuidToDelete, uuid)) ? _Utils_Tuple2(
+					_Utils_update(
+						model,
+						{deleteInit: true, uuidToDelete: uuid}),
+					$elm$core$Platform$Cmd$none) : _Utils_Tuple2(
+					_Utils_update(
+						model,
+						{deleteInit: false, uuidToDelete: ''}),
 					$author$project$Main$idbDelete(
 						{name: 'items', uuid: uuid}));
 			case 'DeleteBom':
@@ -6012,8 +6054,26 @@ var $author$project$Main$update = F2(
 				return _Utils_Tuple2(
 					model,
 					$author$project$Main$idbExport(_Utils_Tuple0));
-			default:
+			case 'Import':
 				return _Utils_Tuple2(model, $elm$core$Platform$Cmd$none);
+			default:
+				var formatter = msg.a;
+				switch (formatter) {
+					case 'us':
+						return _Utils_Tuple2(
+							_Utils_update(
+								model,
+								{selectedNumberFormattingLocale: $cuducos$elm_format_number$FormatNumber$Locales$usLocale}),
+							$elm$core$Platform$Cmd$none);
+					case 'eu':
+						return _Utils_Tuple2(
+							_Utils_update(
+								model,
+								{selectedNumberFormattingLocale: $cuducos$elm_format_number$FormatNumber$Locales$spanishLocale}),
+							$elm$core$Platform$Cmd$none);
+					default:
+						return _Utils_Tuple2(model, $elm$core$Platform$Cmd$none);
+				}
 		}
 	});
 var $author$project$Main$AddNewBom = {$: 'AddNewBom'};
@@ -6030,6 +6090,9 @@ var $author$project$Main$InputItemPrice = function (a) {
 };
 var $author$project$Main$InputItemQty = function (a) {
 	return {$: 'InputItemQty', a: a};
+};
+var $author$project$Main$SelectNumberFormatting = function (a) {
+	return {$: 'SelectNumberFormatting', a: a};
 };
 var $elm$virtual_dom$VirtualDom$attribute = F2(
 	function (key, value) {
@@ -6580,67 +6643,44 @@ var $author$project$Main$makeBomListItem = function (bom) {
 var $author$project$Main$DeleteItem = function (a) {
 	return {$: 'DeleteItem', a: a};
 };
-var $cuducos$elm_format_number$FormatNumber$Locales$Exact = function (a) {
-	return {$: 'Exact', a: a};
-};
-var $cuducos$elm_format_number$FormatNumber$Locales$Min = function (a) {
-	return {$: 'Min', a: a};
-};
-var $cuducos$elm_format_number$FormatNumber$Locales$base = {
-	decimalSeparator: '.',
-	decimals: $cuducos$elm_format_number$FormatNumber$Locales$Min(0),
-	negativePrefix: '−',
-	negativeSuffix: '',
-	positivePrefix: '',
-	positiveSuffix: '',
-	thousandSeparator: '',
-	zeroPrefix: '',
-	zeroSuffix: ''
-};
-var $cuducos$elm_format_number$FormatNumber$Locales$spanishLocale = _Utils_update(
-	$cuducos$elm_format_number$FormatNumber$Locales$base,
-	{
-		decimalSeparator: ',',
-		decimals: $cuducos$elm_format_number$FormatNumber$Locales$Exact(3),
-		thousandSeparator: '.'
-	});
 var $elm$html$Html$td = _VirtualDom_node('td');
 var $elm$html$Html$tr = _VirtualDom_node('tr');
-var $author$project$Main$makeItemListItem = function (item) {
-	return A2(
-		$elm$html$Html$tr,
-		_List_fromArray(
-			[
-				$elm$html$Html$Events$onClick(
-				$author$project$Main$DeleteItem(item.uuid))
-			]),
-		_List_fromArray(
-			[
-				A2(
-				$elm$html$Html$td,
-				_List_Nil,
-				_List_fromArray(
-					[
-						$elm$html$Html$text(item.name)
-					])),
-				A2(
-				$elm$html$Html$td,
-				_List_Nil,
-				_List_fromArray(
-					[
-						$elm$html$Html$text(
-						$elm$core$String$fromInt(item.qty))
-					])),
-				A2(
-				$elm$html$Html$td,
-				_List_Nil,
-				_List_fromArray(
-					[
-						$elm$html$Html$text(
-						'Rp' + A2($cuducos$elm_format_number$FormatNumber$format, $cuducos$elm_format_number$FormatNumber$Locales$spanishLocale, item.price))
-					]))
-			]));
-};
+var $author$project$Main$makeItemListItem = F2(
+	function (locale, item) {
+		return A2(
+			$elm$html$Html$tr,
+			_List_fromArray(
+				[
+					$elm$html$Html$Events$onClick(
+					$author$project$Main$DeleteItem(item.uuid))
+				]),
+			_List_fromArray(
+				[
+					A2(
+					$elm$html$Html$td,
+					_List_Nil,
+					_List_fromArray(
+						[
+							$elm$html$Html$text(item.name)
+						])),
+					A2(
+					$elm$html$Html$td,
+					_List_Nil,
+					_List_fromArray(
+						[
+							$elm$html$Html$text(
+							$elm$core$String$fromInt(item.qty))
+						])),
+					A2(
+					$elm$html$Html$td,
+					_List_Nil,
+					_List_fromArray(
+						[
+							$elm$html$Html$text(
+							'Rp' + A2($cuducos$elm_format_number$FormatNumber$format, locale, item.price))
+						]))
+				]));
+	});
 var $elm$html$Html$Events$alwaysStop = function (x) {
 	return _Utils_Tuple2(x, true);
 };
@@ -6672,6 +6712,7 @@ var $elm$html$Html$Events$onInput = function (tagger) {
 			$elm$html$Html$Events$alwaysStop,
 			A2($elm$json$Json$Decode$map, tagger, $elm$html$Html$Events$targetValue)));
 };
+var $elm$html$Html$option = _VirtualDom_node('option');
 var $elm$html$Html$Attributes$stringProperty = F2(
 	function (key, string) {
 		return A2(
@@ -6680,6 +6721,7 @@ var $elm$html$Html$Attributes$stringProperty = F2(
 			$elm$json$Json$Encode$string(string));
 	});
 var $elm$html$Html$Attributes$placeholder = $elm$html$Html$Attributes$stringProperty('placeholder');
+var $elm$html$Html$select = _VirtualDom_node('select');
 var $elm$html$Html$strong = _VirtualDom_node('strong');
 var $elm$html$Html$table = _VirtualDom_node('table');
 var $elm$html$Html$th = _VirtualDom_node('th');
@@ -6754,6 +6796,47 @@ var $author$project$Main$view = function (model) {
 						_List_fromArray(
 							[
 								$elm$html$Html$text('Export')
+							]))
+					])),
+				A2(
+				$elm$html$Html$div,
+				_List_fromArray(
+					[
+						A2($elm$html$Html$Attributes$style, 'display', 'flex'),
+						A2($elm$html$Html$Attributes$style, 'justify-content', 'center'),
+						A2($elm$html$Html$Attributes$style, 'align-items', 'center')
+					]),
+				_List_fromArray(
+					[
+						$elm$html$Html$text('Number formatting:'),
+						A2(
+						$elm$html$Html$select,
+						_List_fromArray(
+							[
+								$elm$html$Html$Events$onInput($author$project$Main$SelectNumberFormatting)
+							]),
+						_List_fromArray(
+							[
+								A2(
+								$elm$html$Html$option,
+								_List_fromArray(
+									[
+										$elm$html$Html$Attributes$value('eu')
+									]),
+								_List_fromArray(
+									[
+										$elm$html$Html$text('Europe')
+									])),
+								A2(
+								$elm$html$Html$option,
+								_List_fromArray(
+									[
+										$elm$html$Html$Attributes$value('us')
+									]),
+								_List_fromArray(
+									[
+										$elm$html$Html$text('US')
+									]))
 							]))
 					])),
 				A2(
@@ -6963,7 +7046,31 @@ var $author$project$Main$view = function (model) {
 										_List_Nil,
 										_List_fromArray(
 											[
-												$elm$html$Html$text('(Click to delete)')
+												model.deleteInit ? A2(
+												$elm$html$Html$div,
+												_List_fromArray(
+													[
+														A2($elm$html$Html$Attributes$style, 'color', 'red')
+													]),
+												_List_fromArray(
+													[
+														$elm$html$Html$text(
+														'Click once more to delete ' + A2(
+															$elm$core$Maybe$withDefault,
+															'',
+															$elm$core$List$head(
+																A2(
+																	$elm$core$List$map,
+																	function (item) {
+																		return item.name;
+																	},
+																	A2(
+																		$elm$core$List$filter,
+																		function (item) {
+																			return _Utils_eq(item.uuid, model.uuidToDelete);
+																		},
+																		model.items)))))
+													])) : $elm$html$Html$text('(Click to delete)')
 											])),
 										A2(
 										$elm$html$Html$table,
@@ -7005,7 +7112,7 @@ var $author$project$Main$view = function (model) {
 												]),
 											A2(
 												$elm$core$List$map,
-												$author$project$Main$makeItemListItem,
+												$author$project$Main$makeItemListItem(model.selectedNumberFormattingLocale),
 												A2(
 													$elm$core$List$filter,
 													function (item) {
@@ -7044,7 +7151,7 @@ var $author$project$Main$view = function (model) {
 														$elm$html$Html$text(
 														'IDR' + A2(
 															$cuducos$elm_format_number$FormatNumber$format,
-															$cuducos$elm_format_number$FormatNumber$Locales$spanishLocale,
+															model.selectedNumberFormattingLocale,
 															A3(
 																$elm$core$List$foldl,
 																F2(

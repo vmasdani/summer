@@ -11,7 +11,9 @@ import Uuid
 import Dict exposing (update)
 import Json.Decode.Pipeline as Pipeline
 import FormatNumber exposing (format)
-import FormatNumber.Locales exposing (spanishLocale, usLocale)
+import FormatNumber.Locales exposing (Locale, spanishLocale, usLocale)
+import List
+import Maybe
 
 main =
   Browser.element
@@ -36,6 +38,12 @@ type alias Model =
   , newItem : Item
   , currentSeed : Seed
   , currentUuid : Maybe Uuid.Uuid
+  , selectedNumberFormattingLocale : Locale
+  , currency : String
+  , customCurrency : Bool
+  , customCurrencyValue : String
+  , deleteInit : Bool
+  , uuidToDelete : String
   }
 
 type alias DeleteModel =
@@ -57,7 +65,7 @@ recvModelEncoder recvModel =
 
 type alias Bom =
   { uuid : String
-  , name : String
+  , name : String 
   } 
 
 bomDecoder : Decode.Decoder Bom
@@ -133,6 +141,12 @@ init seed =
       , newBom = initialBom
       , currentSeed = initialSeed seed
       , currentUuid = Nothing
+      , currency = "Rp"
+      , customCurrency = False
+      , customCurrencyValue = ""
+      , selectedNumberFormattingLocale = spanishLocale
+      , deleteInit = False
+      , uuidToDelete = ""
       } 
   in
   
@@ -159,6 +173,7 @@ type Msg
   | DeleteBom String
   | Export
   | Import
+  | SelectNumberFormatting String 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
@@ -274,20 +289,33 @@ update msg model =
       ( { model | selectedBom = Just bom }, Cmd.none )
 
     DeleteItem uuid ->
-      ( model
-      , idbDelete { name="items", uuid=uuid } 
-      )
+      if model.uuidToDelete /= uuid then
+        ( { model | deleteInit = True, uuidToDelete = uuid }, Cmd.none )
+      else
+        ( { model | deleteInit = False, uuidToDelete = "" }
+        , idbDelete { name="items", uuid=uuid } 
+        )
 
     DeleteBom uuid ->
       ( { model | selectedBom = Nothing }
       , idbDelete { name="boms", uuid=uuid }
       )
-    
     Export ->
       ( model, idbExport () )
 
     Import ->
       ( model, Cmd.none )
+
+    SelectNumberFormatting formatter ->
+      case formatter of
+        "us" -> 
+          ( { model | selectedNumberFormattingLocale = usLocale }, Cmd.none )
+
+        "eu" ->
+          ( { model | selectedNumberFormattingLocale = spanishLocale }, Cmd.none )
+         
+        _ ->
+          ( model, Cmd.none )
 
 subscriptions : Model -> Sub Msg
 subscriptions _ =
@@ -317,14 +345,14 @@ makeBomListItem bom =
         [ text "Delete" ]
     ]
   
-makeItemListItem : Item -> Html Msg
-makeItemListItem item =
+makeItemListItem : Locale -> Item -> Html Msg
+makeItemListItem locale item =
   tr 
     [ onClick (DeleteItem item.uuid)
     ]
     [ td [] [ text item.name ]
     , td [] [ text <| String.fromInt item.qty ]
-    , td [] [ text <| "Rp" ++ format spanishLocale (toFloat item.price) ]
+    , td [] [ text <| "Rp" ++ format locale (toFloat item.price) ]
     ]
   
 
@@ -356,6 +384,20 @@ view model =
         [ button [] [ text "Import (WIP)" ]
         , button [ onClick Export ] [ text "Export" ]
         ]
+    , div 
+        [ style "display" "flex"
+        , style "justify-content" "center"
+        , style "align-items" "center"
+        ]
+        [ text "Number formatting:"
+        , select
+            [ onInput SelectNumberFormatting
+            ]
+            [ option [ value "eu" ] [ text "Europe" ]
+            , option [ value "us" ] [ text "US" ]
+            ]
+        ]
+
     , div 
         [ style "margin-top" "1em"
         , style "margin-bottom" "1em"
@@ -459,7 +501,21 @@ view model =
             , div 
                 [ style "margin-top" "1em" ] 
                 [ div []
-                    [ text "(Click to delete)" ]
+                    [ if model.deleteInit == True then
+                        div 
+                          [ style "color" "red" ] 
+                          [ text <| 
+                              "Click once more to delete " ++ 
+                              Maybe.withDefault
+                                ""
+                                (List.filter (\item -> item.uuid == model.uuidToDelete) model.items
+                                  |> List.map (\item -> item.name)
+                                  |> List.head
+                                )
+                          ]
+                      else
+                        text "(Click to delete)"  
+                    ] 
                 , table 
                     [ attribute "border" "1" 
                     , style "width" "100%"
@@ -473,7 +529,7 @@ view model =
                     ++
                     (model.items
                       |> List.filter (\item -> item.bomUuid == bom.uuid)
-                      |> List.map makeItemListItem)
+                      |> List.map (makeItemListItem model.selectedNumberFormattingLocale))
                     )
                 ]
             , div [ style "margin-top" "1em" ]
@@ -482,7 +538,7 @@ view model =
                     [] 
                     [ h3
                         [ style "color" "green" ]
-                        [ text <| "IDR" ++ format spanishLocale 
+                        [ text <| "IDR" ++ format (model.selectedNumberFormattingLocale) 
                             (model.items
                               |> List.filter (\item -> item.bomUuid == bom.uuid)
                               |> List.foldl (\item acc -> acc + item.qty * item.price) 0
